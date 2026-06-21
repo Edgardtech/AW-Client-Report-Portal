@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AW Client Report Portal{% endblock %} — Windbrook Solutions</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if session.user %}
+<nav>
+  <div class="brand">Windbrook Solutions <span>Client Report Portal</span></div>
+  <div>
+    <a href="{{ url_for('clients') }}">Clients</a>
+    <a href="{{ url_for('logout') }}">Logout ({{ session.user }})</a>
+  </div>
+</nav>
+{% endif %}
+{% block content %}{% endblock %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

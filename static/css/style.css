@@ -1,0 +1,93 @@
+:root {
+  --blue-dark: #1B3A6B;
+  --blue-mid: #2E5FA3;
+  --blue-light: #E8EDF5;
+  --green: #2E7D32;
+  --red: #C62828;
+  --gray: #F5F7FA;
+  --border: #DDE3EC;
+  --text: #1A202C;
+  --muted: #6B7280;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray); color: var(--text); min-height: 100vh; }
+
+/* NAV */
+nav { background: var(--blue-dark); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+nav .brand { color: white; font-weight: 700; font-size: 17px; letter-spacing: 0.3px; }
+nav .brand span { opacity: 0.6; font-weight: 400; font-size: 13px; margin-left: 8px; }
+nav a { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 13px; margin-left: 20px; }
+nav a:hover { color: white; }
+
+/* CONTAINER */
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.page-header h1 { font-size: 22px; color: var(--blue-dark); font-weight: 700; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+.btn-primary { background: var(--blue-dark); color: white; }
+.btn-primary:hover { background: var(--blue-mid); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #1B5E20; }
+.btn-danger { background: var(--red); color: white; }
+.btn-outline { background: white; color: var(--blue-dark); border: 1.5px solid var(--border); }
+.btn-outline:hover { border-color: var(--blue-mid); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* CARD */
+.card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.card-header { font-size: 14px; font-weight: 700; color: var(--blue-dark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 14px; background: var(--gray); border-bottom: 1px solid var(--border); }
+td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--blue-light); }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1/-1; }
+label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+input, select { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 14px; width: 100%; transition: border 0.15s; }
+input:focus, select:focus { outline: none; border-color: var(--blue-mid); }
+.hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* LOGIN */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--blue-dark); }
+.login-box { background: white; border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.login-box h2 { font-size: 20px; color: var(--blue-dark); margin-bottom: 6px; }
+.login-box p { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.error-msg { background: #FFEBEE; color: var(--red); padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 16px; }
+
+/* BADGES */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #E8F5E9; color: var(--green); }
+.badge-blue { background: var(--blue-light); color: var(--blue-dark); }
+
+/* CALC PREVIEW */
+.calc-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 20px 0; }
+.calc-item { background: var(--blue-light); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.calc-item .val { font-size: 18px; font-weight: 700; color: var(--blue-dark); }
+.calc-item .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ACCOUNTS BUILDER */
+.accounts-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.account-row { display: grid; grid-template-columns: 140px 120px 100px 100px 80px auto; gap: 8px; align-items: center; background: var(--gray); padding: 10px 12px; border-radius: 8px; }
+.account-row input, .account-row select { font-size: 13px; padding: 7px 10px; }
+.btn-remove { background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; padding: 4px; }
+
+/* REPORT VIEW */
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.stat-block { background: var(--blue-light); border-radius: 10px; padding: 20px; }
+.stat-block .label { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+.stat-block .value { font-size: 24px; font-weight: 700; color: var(--blue-dark); margin-top: 6px; }
+.bubble-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.acc-bubble { background: white; border: 2px solid var(--blue-mid); border-radius: 50%; width: 90px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8px; }
+.acc-bubble.ret { border-color: var(--green); }
+.acc-bubble.liab { border-color: var(--red); }
+.acc-bubble .acc-type { font-size: 10px; font-weight: 700; color: var(--blue-dark); }
+.acc-bubble .acc-amt { font-size: 12px; font-weight: 700; color: var(--blue-dark); margin-top: 4px; }
+.total-row { background: var(--blue-dark); color: white; border-radius: 10px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }

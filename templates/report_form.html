@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}Generate Report — {{ client.name1 }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Generate Report — {{ client.name1 }}{{ ' & ' + client.name2 if client.name2 else '' }}</h1>
+    <a href="{{ url_for('clients') }}" class="btn btn-outline">← Back</a>
+  </div>
+
+  <form method="POST" id="reportForm">
+
+    <!-- PERIOD -->
+    <div class="card">
+      <div class="card-header">Report Period</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Quarter *</label>
+          <select name="quarter" required>
+            {% for q in quarters %}<option>{{ q }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year *</label>
+          <input name="year" type="number" value="{{ current_year }}" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- SACS FIELDS -->
+    <div class="card">
+      <div class="card-header">💰 SACS — Cash Flow</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Monthly Inflow (salary)</label>
+          <input type="number" value="{{ client.monthly_salary }}" disabled style="background:#eee">
+          <div class="hint">Set in client profile</div>
+        </div>
+        <div class="form-group">
+          <label>Monthly Outflow (expenses)</label>
+          <input type="number" value="{{ client.monthly_expense }}" disabled style="background:#eee">
+          <div class="hint">Set in client profile</div>
+        </div>
+        <div class="form-group">
+          <label>Private Reserve Balance *</label>
+          <input name="private_reserve_balance" id="prBal" type="number" step="0.01" required
+            value="{{ last_data.private_reserve_balance if last_data else '' }}"
+            placeholder="{{ 'Last: $' + '{:,.0f}'.format(last_data.private_reserve_balance) if last_data else 'Enter current balance' }}">
+          <div class="hint">Current Pinnacle Bank HYSA balance</div>
+        </div>
+        <div class="form-group">
+          <label>Zillow Home Value *</label>
+          <input name="zillow_value" id="zillow" type="number" step="0.01" required
+            value="{{ last_data.zillow_value if last_data else '' }}"
+            placeholder="{{ 'Last: $' + '{:,.0f}'.format(last_data.zillow_value) if last_data else 'Enter Zillow Zestimate' }}">
+          <div class="hint">Current Zillow Zestimate for trust property</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT BALANCES -->
+    {% set ret1_accs = accounts | selectattr('type','eq','retirement') | selectattr('owner','eq','1') | list %}
+    {% set ret2_accs = accounts | selectattr('type','eq','retirement') | selectattr('owner','eq','2') | list %}
+    {% set nr_accs   = accounts | selectattr('type','eq','non-retirement') | list %}
+    {% set liab_accs = accounts | selectattr('type','eq','liability') | list %}
+
+    {% if ret1_accs %}
+    <div class="card">
+      <div class="card-header">📊 {{ client.name1.split()[0] }} — Retirement Accounts</div>
+      <div class="form-grid">
+        {% for a in ret1_accs %}
+        <div class="form-group">
+          <label>{{ a.subtype }}{% if a.last4 %} ****{{ a.last4 }}{% endif %}</label>
+          <input name="bal_{{ a.id }}" type="number" step="0.01" required
+            value="{{ last_data.balances.get(a.id, '') if last_data and last_data.balances else '' }}"
+            placeholder="Current balance" oninput="recalc()">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if ret2_accs and client.name2 %}
+    <div class="card">
+      <div class="card-header">📊 {{ client.name2.split()[0] }} — Retirement Accounts</div>
+      <div class="form-grid">
+        {% for a in ret2_accs %}
+        <div class="form-group">
+          <label>{{ a.subtype }}{% if a.last4 %} ****{{ a.last4 }}{% endif %}</label>
+          <input name="bal_{{ a.id }}" type="number" step="0.01" required
+            value="{{ last_data.balances.get(a.id, '') if last_data and last_data.balances else '' }}"
+            placeholder="Current balance" oninput="recalc()">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if nr_accs %}
+    <div class="card">
+      <div class="card-header">💼 Non-Retirement Accounts</div>
+      <div class="form-grid">
+        {% for a in nr_accs %}
+        <div class="form-group">
+          <label>{{ a.subtype }}{% if a.last4 %} ****{{ a.last4 }}{% endif %}</label>
+          <input name="bal_{{ a.id }}" type="number" step="0.01" required
+            value="{{ last_data.balances.get(a.id, '') if last_data and last_data.balances else '' }}"
+            placeholder="Current balance" oninput="recalc()">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if liab_accs %}
+    <div class="card">
+      <div class="card-header">⚠️ Liabilities</div>
+      <div class="form-grid">
+        {% for a in liab_accs %}
+        <div class="form-group">
+          <label>{{ a.subtype }}{% if a.rate %} ({{ a.rate }}%){% endif %}{% if a.last4 %} ****{{ a.last4 }}{% endif %}</label>
+          <input name="bal_{{ a.id }}" type="number" step="0.01" required
+            value="{{ last_data.balances.get(a.id, '') if last_data and last_data.balances else '' }}"
+            placeholder="Current balance" oninput="recalc()">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- LIVE CALC PREVIEW -->
+    <div class="card">
+      <div class="card-header">⚡ Live Calculation Preview</div>
+      <div class="calc-strip">
+        <div class="calc-item"><div class="val" id="prev_excess">—</div><div class="lbl">Monthly Excess</div></div>
+        <div class="calc-item"><div class="val" id="prev_pr_target">—</div><div class="lbl">PR Target</div></div>
+        <div class="calc-item"><div class="val" id="prev_net_worth">—</div><div class="lbl">Net Worth</div></div>
+        <div class="calc-item"><div class="val" id="prev_liabilities">—</div><div class="lbl">Liabilities</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:40px">
+      <a href="{{ url_for('clients') }}" class="btn btn-outline">Cancel</a>
+      <button type="submit" class="btn btn-success" style="font-size:15px;padding:12px 28px">Generate Reports →</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const INFLOW   = {{ client.monthly_salary }};
+const OUTFLOW  = {{ client.monthly_expense }};
+const INS_DED  = {{ client.insurance_deductibles }};
+const ACCOUNTS = {{ accounts | tojson }};
+
+function fmt(n) { return '$' + n.toLocaleString('en-US', {maximumFractionDigits:0}); }
+
+function recalc() {
+  const excess    = INFLOW - OUTFLOW;
+  const prTarget  = (6 * OUTFLOW) + INS_DED;
+
+  let ret1=0, ret2=0, nonRet=0, liab=0;
+  ACCOUNTS.forEach(a => {
+    const inp = document.querySelector(`[name="bal_${a.id}"]`);
+    const val = inp ? parseFloat(inp.value||0) : 0;
+    if (a.type==='retirement' && a.owner==='1') ret1 += val;
+    if (a.type==='retirement' && a.owner==='2') ret2 += val;
+    if (a.type==='non-retirement') nonRet += val;
+    if (a.type==='liability') liab += val;
+  });
+  const zillow = parseFloat(document.getElementById('zillow')?.value||0);
+  const grand = ret1 + ret2 + nonRet + zillow;
+
+  document.getElementById('prev_excess').textContent    = fmt(excess);
+  document.getElementById('prev_pr_target').textContent = fmt(prTarget);
+  document.getElementById('prev_net_worth').textContent = fmt(grand);
+  document.getElementById('prev_liabilities').textContent = fmt(liab);
+}
+
+document.getElementById('zillow').addEventListener('input', recalc);
+recalc();
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>Clients</h1>
+    <a href="{{ url_for('new_client') }}" class="btn btn-primary">+ New Client</a>
+  </div>
+  <div class="card">
+    {% if clients %}
+    <table>
+      <thead>
+        <tr>
+          <th>Client Name</th>
+          <th>Spouse</th>
+          <th>Monthly Inflow</th>
+          <th>Monthly Outflow</th>
+          <th>Last Report</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cl in clients %}
+        <tr>
+          <td><strong>{{ cl.name1 }}</strong></td>
+          <td>{{ cl.name2 or '—' }}</td>
+          <td>${{ '{:,.0f}'.format(cl.monthly_salary or 0) }}</td>
+          <td>${{ '{:,.0f}'.format(cl.monthly_expense or 0) }}</td>
+          <td>
+            {% if cl.last_report %}
+              <span class="badge badge-green">{{ cl.last_report[:10] }}</span>
+            {% else %}
+              <span class="badge badge-blue">No reports yet</span>
+            {% endif %}
+          </td>
+          <td style="display:flex;gap:8px">
+            <a href="{{ url_for('generate_report', cid=cl.id) }}" class="btn btn-success btn-sm">Generate Report</a>
+            <a href="{{ url_for('edit_client', cid=cl.id) }}" class="btn btn-outline btn-sm">Edit</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:48px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">👤</div>
+      <div style="font-weight:600;margin-bottom:6px">No clients yet</div>
+      <div style="font-size:13px">Add your first client to get started</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

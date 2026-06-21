@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Report — {{ client.name1 }} {{ data.quarter }}{{ data.year }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>{{ data.quarter }} {{ data.year }} — {{ client.name1 }}{{ ' & ' + client.name2 if client.name2 else '' }}</h1>
+    <div style="display:flex;gap:10px">
+      <a href="{{ url_for('generate_report', cid=client.id) }}" class="btn btn-outline">New Report</a>
+      <a href="{{ url_for('download_pdf', cid=client.id, rid=report.id, report_type='sacs') }}" class="btn btn-primary">⬇ Download SACS PDF</a>
+      <a href="{{ url_for('download_pdf', cid=client.id, rid=report.id, report_type='tcc') }}" class="btn btn-success">⬇ Download TCC PDF</a>
+    </div>
+  </div>
+
+  <!-- SACS SUMMARY -->
+  <div class="card">
+    <div class="card-header">💰 SACS — Cash Flow Summary</div>
+    <div class="report-grid">
+      <div class="stat-block">
+        <div class="label">Monthly Inflow</div>
+        <div class="value" style="color:var(--green)">${{ '{:,.0f}'.format(data.inflow) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="label">Monthly Outflow</div>
+        <div class="value" style="color:var(--red)">${{ '{:,.0f}'.format(data.outflow) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="label">Monthly Excess → Private Reserve</div>
+        <div class="value">${{ '{:,.0f}'.format(data.excess) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="label">Private Reserve Target</div>
+        <div class="value">${{ '{:,.0f}'.format(data.private_reserve_target) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="label">Private Reserve Balance</div>
+        <div class="value">${{ '{:,.0f}'.format(data.private_reserve_balance) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="label">Zillow Home Value</div>
+        <div class="value">${{ '{:,.0f}'.format(data.zillow_value) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TCC SUMMARY -->
+  {% set ret1_accs = accounts | selectattr('type','eq','retirement') | selectattr('owner','eq','1') | list %}
+  {% set ret2_accs = accounts | selectattr('type','eq','retirement') | selectattr('owner','eq','2') | list %}
+  {% set nr_accs   = accounts | selectattr('type','eq','non-retirement') | list %}
+  {% set liab_accs = accounts | selectattr('type','eq','liability') | list %}
+
+  <div class="card">
+    <div class="card-header">📊 TCC — Net Worth Overview</div>
+
+    {% if ret1_accs %}
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">{{ client.name1.split()[0] }} — Retirement</div>
+      <div class="bubble-row">
+        {% for a in ret1_accs %}
+        <div class="acc-bubble ret">
+          <div class="acc-type">{{ a.subtype }}</div>
+          {% if a.last4 %}<div style="font-size:9px;color:var(--muted)">****{{ a.last4 }}</div>{% endif %}
+          <div class="acc-amt">${{ '{:,.0f}'.format(data.balances.get(a.id, 0) | float) }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;align-items:center;background:var(--blue-light);border-radius:8px;padding:12px 16px;min-width:120px;flex-direction:column">
+          <div style="font-size:11px;color:var(--muted)">Total</div>
+          <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${{ '{:,.0f}'.format(data.ret1) }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if ret2_accs and client.name2 %}
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">{{ client.name2.split()[0] }} — Retirement</div>
+      <div class="bubble-row">
+        {% for a in ret2_accs %}
+        <div class="acc-bubble ret">
+          <div class="acc-type">{{ a.subtype }}</div>
+          {% if a.last4 %}<div style="font-size:9px;color:var(--muted)">****{{ a.last4 }}</div>{% endif %}
+          <div class="acc-amt">${{ '{:,.0f}'.format(data.balances.get(a.id, 0) | float) }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;align-items:center;background:var(--blue-light);border-radius:8px;padding:12px 16px;min-width:120px;flex-direction:column">
+          <div style="font-size:11px;color:var(--muted)">Total</div>
+          <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${{ '{:,.0f}'.format(data.ret2) }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if nr_accs %}
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Non-Retirement</div>
+      <div class="bubble-row">
+        {% for a in nr_accs %}
+        <div class="acc-bubble">
+          <div class="acc-type">{{ a.subtype }}</div>
+          {% if a.last4 %}<div style="font-size:9px;color:var(--muted)">****{{ a.last4 }}</div>{% endif %}
+          <div class="acc-amt">${{ '{:,.0f}'.format(data.balances.get(a.id, 0) | float) }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;align-items:center;background:var(--blue-light);border-radius:8px;padding:12px 16px;min-width:120px;flex-direction:column">
+          <div style="font-size:11px;color:var(--muted)">Total</div>
+          <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${{ '{:,.0f}'.format(data.non_ret) }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if liab_accs %}
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:8px">⚠️ Liabilities (not subtracted from net worth)</div>
+      <div class="bubble-row">
+        {% for a in liab_accs %}
+        <div class="acc-bubble liab">
+          <div class="acc-type">{{ a.subtype }}</div>
+          {% if a.rate %}<div style="font-size:9px;color:var(--muted)">{{ a.rate }}%</div>{% endif %}
+          <div class="acc-amt">${{ '{:,.0f}'.format(data.balances.get(a.id, 0) | float) }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;align-items:center;background:#FFEBEE;border-radius:8px;padding:12px 16px;min-width:120px;flex-direction:column">
+          <div style="font-size:11px;color:var(--muted)">Total</div>
+          <div style="font-size:16px;font-weight:700;color:var(--red)">${{ '{:,.0f}'.format(data.liabilities) }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="total-row">
+      <span style="font-size:14px;font-weight:600">Total Net Worth (excl. liabilities)</span>
+      <span style="font-size:24px;font-weight:700">${{ '{:,.0f}'.format(data.grand_total) }}</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">
+    Generated {{ report.created_at[:16] }} · Windbrook Solutions — Confidential
+  </div>
+</div>
+{% endblock %}

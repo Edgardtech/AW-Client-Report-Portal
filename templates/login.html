@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-box">
+    <h2>Windbrook Solutions</h2>
+    <p>Client Report Portal — Staff Login</p>
+    {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+    <form method="POST">
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Username</label>
+        <input name="username" placeholder="e.g. rebecca" autofocus>
+      </div>
+      <div class="form-group" style="margin-bottom:24px">
+        <label>Password</label>
+        <input name="password" type="password">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Sign In</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

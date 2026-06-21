@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if client else 'New' }} Client{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>{{ 'Edit Client' if client else 'New Client' }}</h1>
+    <a href="{{ url_for('clients') }}" class="btn btn-outline">← Back</a>
+  </div>
+
+  <form method="POST" id="clientForm">
+    <input type="hidden" name="accounts_json" id="accounts_json" value="{{ client.accounts if client else '[]' }}">
+
+    <!-- PERSONAL INFO -->
+    <div class="card">
+      <div class="card-header">Client Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Client 1 Full Name *</label>
+          <input name="name1" required value="{{ client.name1 if client else '' }}" placeholder="e.g. John Smith">
+        </div>
+        <div class="form-group">
+          <label>Client 2 Full Name (spouse)</label>
+          <input name="name2" value="{{ client.name2 if client else '' }}" placeholder="e.g. Jane Smith">
+        </div>
+        <div class="form-group">
+          <label>Client 1 DOB</label>
+          <input name="dob1" type="date" value="{{ client.dob1 if client else '' }}">
+        </div>
+        <div class="form-group">
+          <label>Client 2 DOB</label>
+          <input name="dob2" type="date" value="{{ client.dob2 if client else '' }}">
+        </div>
+        <div class="form-group">
+          <label>Client 1 SSN (last 4)</label>
+          <input name="ssn1" maxlength="4" value="{{ client.ssn1 if client else '' }}" placeholder="1234">
+        </div>
+        <div class="form-group">
+          <label>Client 2 SSN (last 4)</label>
+          <input name="ssn2" maxlength="4" value="{{ client.ssn2 if client else '' }}" placeholder="5678">
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCIALS -->
+    <div class="card">
+      <div class="card-header">Financial Profile</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Monthly Take-Home Salary (after tax) *</label>
+          <input name="monthly_salary" type="number" step="0.01" required value="{{ client.monthly_salary if client else '' }}" placeholder="15000">
+          <div class="hint">Combined household inflow per month</div>
+        </div>
+        <div class="form-group">
+          <label>Agreed Monthly Expense Budget *</label>
+          <input name="monthly_expense" type="number" step="0.01" required value="{{ client.monthly_expense if client else '' }}" placeholder="11000">
+          <div class="hint">Outflow — rounded up to create buffer</div>
+        </div>
+        <div class="form-group">
+          <label>Total Insurance Deductibles</label>
+          <input name="insurance_deductibles" type="number" step="0.01" value="{{ client.insurance_deductibles if client else '0' }}" placeholder="5000">
+          <div class="hint">Used for Private Reserve target calculation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="card">
+      <div class="card-header">Account Structure</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Add all accounts for this client. This structure will be reused every quarter.</p>
+      <div class="accounts-list" id="accountsList"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="btn btn-outline btn-sm" onclick="addAccount('retirement','1')">+ Retirement (Client 1)</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addAccount('retirement','2')">+ Retirement (Client 2)</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addAccount('non-retirement','')">+ Non-Retirement</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addAccount('trust','')">+ Trust / Property</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="addAccount('liability','')">+ Liability</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <a href="{{ url_for('clients') }}" class="btn btn-outline">Cancel</a>
+      <button type="submit" class="btn btn-primary">{{ 'Save Changes' if client else 'Create Client' }}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+let accounts = JSON.parse(document.getElementById('accounts_json').value || '[]');
+
+const SUBTYPES = {
+  'retirement': ['IRA','Roth IRA','401K','Pension','403b'],
+  'non-retirement': ['Brokerage','Joint Account','Savings','Checking'],
+  'trust': ['Primary Residence','Investment Property'],
+  'liability': ['Mortgage','Auto Loan','HELOC','Credit Card']
+};
+
+function renderAccounts() {
+  const list = document.getElementById('accountsList');
+  list.innerHTML = '';
+  accounts.forEach((a, i) => {
+    const subtypes = SUBTYPES[a.type] || [];
+    const ownerField = (a.type === 'retirement') ?
+      `<select onchange="accounts[${i}].owner=this.value">
+        <option value="1" ${a.owner==='1'?'selected':''}>Client 1</option>
+        <option value="2" ${a.owner==='2'?'selected':''}>Client 2</option>
+      </select>` : `<input value="" disabled placeholder="—" style="background:#eee">`;
+
+    const rateField = (a.type === 'liability') ?
+      `<input type="number" step="0.01" placeholder="Rate%" value="${a.rate||''}" onchange="accounts[${i}].rate=this.value" style="width:80px">` :
+      `<input disabled placeholder="—" style="background:#eee;width:80px">`;
+
+    list.innerHTML += `
+      <div class="account-row">
+        <select onchange="accounts[${i}].subtype=this.value">
+          ${subtypes.map(s => `<option ${a.subtype===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <span style="font-size:12px;color:var(--muted);background:var(--blue-light);padding:4px 8px;border-radius:4px">${a.type}</span>
+        ${ownerField}
+        <input placeholder="Last 4 acct#" maxlength="4" value="${a.last4||''}" onchange="accounts[${i}].last4=this.value" style="width:100px">
+        ${rateField}
+        <button type="button" class="btn-remove" onclick="removeAccount(${i})">✕</button>
+      </div>`;
+  });
+  document.getElementById('accounts_json').value = JSON.stringify(accounts);
+}
+
+function addAccount(type, owner) {
+  const subtypes = SUBTYPES[type] || [];
+  accounts.push({ id: 'acc_' + Date.now() + '_' + Math.random().toString(36).slice(2,6), type, owner, subtype: subtypes[0]||'', last4:'', rate:'' });
+  renderAccounts();
+}
+
+function removeAccount(i) {
+  accounts.splice(i, 1);
+  renderAccounts();
+}
+
+document.getElementById('clientForm').addEventListener('submit', () => {
+  document.getElementById('accounts_json').value = JSON.stringify(accounts);
+});
+
+renderAccounts();
+</script>
+{% endblock %}
