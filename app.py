@@ -197,8 +197,8 @@ def generate_report(cid):
 def report_view(cid, rid):
     if 'user' not in session: return redirect(url_for('login'))
     db = get_db()
-    client = db.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone()
-    report = db.execute('SELECT * FROM reports WHERE id=? AND client_id=?', (rid,cid)).fetchone()
+    client = dict(db.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone())
+    report = dict(db.execute('SELECT * FROM reports WHERE id=? AND client_id=?', (rid,cid)).fetchone())
     db.close()
     data = json.loads(report['data'])
     accounts = json.loads(client['accounts'])
@@ -208,8 +208,8 @@ def report_view(cid, rid):
 def download_pdf(cid, rid, report_type):
     if 'user' not in session: return redirect(url_for('login'))
     db = get_db()
-    client = db.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone()
-    report = db.execute('SELECT * FROM reports WHERE id=?', (rid,)).fetchone()
+    client = dict(db.execute('SELECT * FROM clients WHERE id=?', (cid,)).fetchone())
+    report = dict(db.execute('SELECT * FROM reports WHERE id=?', (rid,)).fetchone())
     db.close()
     data = json.loads(report['data'])
     accounts = json.loads(client['accounts'])
